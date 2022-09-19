@@ -39,3 +39,5 @@ Tuesday: Finish HTML structure for map, action menue, status, hook up to objects
 Wednesday: Functions!
 Thursday: Game loop!
 Friday: Style!
+
+![](./Entity-Relationship-Diagram-v1.png)
