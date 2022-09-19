@@ -40,6 +40,6 @@ Wednesday: Functions!
 Thursday: Game loop!
 Friday: Style!
 
-![Entity Relationship Diagram](Entity-Relationship-Diagram-v1.png)
+![Entity Relationship Diagram](./Entity-Relationship-Diagram-v1.png)
 
-![Wireframes](Wireframe-Mockup-v1.png)
+![Wireframes](./Wireframe-Mockup-v1.png)
