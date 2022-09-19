@@ -29,3 +29,13 @@ USER STORIES
 -The users will win combat based on the power of their wager and their skill in choosing a formation dice, a non-transitive series like rock paper scissors, to roll for a bonus [plus any bonuses from powers and/or seasons].
 -The user will win the game when they have eliminated their enemies [or met another victory condition].
 -A user may concede at any time [and all their units will tranform into peasants].
+
+
+WORK WEEK SCHEDULE
+--
+
+Monday: Get basic entity objects programmed and talking to each other.
+Tuesday: Finish HTML structure for map, action menue, status, hook up to objects.
+Wednesday: Functions!
+Thursday: Game loop!
+Friday: Style!
