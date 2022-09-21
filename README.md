@@ -35,7 +35,7 @@ WORK WEEK SCHEDULE
 --
 
 Monday: Get basic entity objects programmed and talking to each other.
-Tuesday: Finish HTML structure for map, action menue, status, hook up to objects.
+Tuesday: Finish HTML structure for map, action menu, status, hook up to objects.
 Wednesday: Functions!
 Thursday: Game loop!
 Friday: Style!
