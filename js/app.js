@@ -1,11 +1,22 @@
-const map = document.getElementById('Game-Map')
-
 // player object
 let player = {
-    playerID: 'player1',
+    playerId: 'player1',
     territories: [],
     units: [],
     commandsRemaining: 0
+}
+
+
+// combat dice
+const dice = {
+    '055555': [0, 5, 5, 5, 5, 5],
+    '116666': [1, 1, 6, 6, 6, 6],
+    '222777': [2, 2, 2, 7, 7, 7],
+    '333388': [3, 3, 3, 3, 8, 8],
+    '444449': [4, 4, 4, 4, 4, 9],
+    roll: function (formation) {
+        return dice[formation][randomRange(0, 5)]
+    }
 }
 
 
@@ -65,33 +76,170 @@ const isAdjacent = (terr1, terr2) => {
             return false
         }
     }
-
     return false
 }
 
+const marchSwitch = () => {
+    if (terrClickState !== 'march-select') {
+        terrClickState = 'march-select'
+        while (menuDiv.firstChild) {
+            menuDiv.removeChild(menuDiv.firstChild)
+        }
+        menuDiv.innerText = "Where do you want to march?\n\n"
+        menuDiv.appendChild(cancelButton)
+    }
+}
+
+const musterFunction = () => {
+    if (terrClickState !== 'muster-select') {
+        terrClickState = 'muster-select'
+    }
+}
+
+const sowFunction = () => {
+    if (terrClickState !== 'sow-select') {
+        terrClickState = 'sow-select'
+    }
+}
+
+const cancelFunction = () => {
+    terrClickState = 'main-game'
+    while (menuDiv.firstChild) {
+        menuDiv.removeChild(menuDiv.firstChild)
+    }
+}
 
 // handles when territory is clicked
 const territoryClick = (e) => {
+    // Get territory's ID and convert into usable coordinates
+    let mapIdString = e.target.getAttribute('id')
+    let coordinates = [parseInt(mapIdString[0]), parseInt(mapIdString[3])]
+
+    // get territory object
+    let territoryObj = gameMap[1].find((territory) => {
+        return (territory.mapId[0] === coordinates[0] && territory.mapId[1] === coordinates[1])
+    })
+
+    // get list of player Priests
+    playerPriests = player.units.map(unit => {
+        if (unit.type === 'priest') {
+            return unit
+        }
+    })
+
     switch (terrClickState) {
+        // At the start of the game you choose two territories and place priests there
         case ('start-game'):
-            let mapIdString = e.target.getAttribute('id')
-            let coordinates = [parseInt(mapIdString[0], 10), parseInt(mapIdString[3], 10)]
+            // create a Priest
             let priestObj = new Unit('priest', coordinates)
-            priestObj.owner = player.playerID
+            priestObj.owner = player.playerId
             priestObj.strength = 1
             priestObj.upkeepCost = 1
-            gameMap[1].forEach(element => { console.log(element.mapId) })
-            console.log(coordinates)
-            let territoryObj = gameMap[1].find(territory => { territory.mapId === coordinates })
-            console.log(territoryObj)
-            // territoryObj.units.push(priestObj)
-            // player.units.push(priestObj)
-            // const priestDOM = document.createElement('div')
-            // priestDOM.classList.add('priest')
-            // e.target.appendChild(priestDOM)
+
+            // add priest object to territory object and player's lists of units
+            territoryObj.owner = player.playerId
+            territoryObj.unitsPresent.push(priestObj)
+            player.units.push(priestObj)
+
+            // create priest DOM element and add to territory div
+            const priestDOM = document.createElement('div')
+            priestDOM.classList.add('priest')
+            e.target.appendChild(priestDOM)
+
+            // check if start-of-game is over
+            if (player.units.length >= 3) {
+                // change the clicking switch
+                terrClickState = 'main-game'
+
+                // clear the starting text from action menu
+                while (menuDiv.firstChild) {
+                    menuDiv.removeChild(menuDiv.firstChild)
+                }
+            }
+            break
+        
+        // neutral state of game waiting for player input
+        case ('main-game'):
+            if (territoryObj.owner === player.playerId) {
+                while (menuDiv.firstChild) {
+                    menuDiv.removeChild(menuDiv.firstChild)
+                }
+                selectedTerritory = territoryObj
+                menuDiv.innerText = 'Select a Command\n\n'
+                menuDiv.appendChild(marchButton)
+                menuDiv.appendChild(musterButton)
+                menuDiv.appendChild(sowButton)
+            }
+            else {
+                while (menuDiv.firstChild) {
+                    menuDiv.removeChild(menuDiv.firstChild)
+                }
+                menuDiv.innerText = "Select a territory you control to give a command."
+            }
+            break
+        
+        // state of game after clicking march when you select where to march
+        case ('march-select'):
+
+            // check if march is in range
+            if (selectedTerritory.mapId[0] === territoryObj.mapId[0] && selectedTerritory.mapId[1] === territoryObj.mapId[1]) {
+                while (menuDiv.firstChild) {
+                    menuDiv.removeChild(menuDiv.firstChild)
+                }
+                menuDiv.innerText = "You're already there.\nWhere do you want to march instead?\n\n"
+                menuDiv.appendChild(cancelButton)
+            } else
+            if (!isAdjacent(selectedTerritory, territoryObj)) {
+                while (menuDiv.firstChild) {
+                    menuDiv.removeChild(menuDiv.firstChild)
+                }
+                menuDiv.innerText = "That's too far.\nWhere do you want to march instead?\n\n"
+                menuDiv.appendChild(cancelButton)
+            }
+            // ask how many are marching
+            else {
+                while (menuDiv.firstChild) {
+                    menuDiv.removeChild(menuDiv.firstChild)
+                }
+                terrClickState = ''
+                menuDiv.innerText = "Click to add or remove units from the march.\n\n"
+                menuDiv.appendChild(cancelButton)
+
+            }
+            break
+
+        default:
             break
     }
 }
+
+
+const mapDiv = document.getElementById('Game-Map')
+const menuDiv = document.getElementById('Action-Menu')
+const statusDiv = document.getElementById('Status-Bar')
+
+const marchButton = document.createElement('button')
+marchButton.classList.add('command')
+marchButton.innerText = 'MARCH'
+marchButton.addEventListener('click', marchSwitch)
+
+const musterButton = document.createElement('button')
+musterButton.classList.add('command')
+musterButton.innerText = 'MUSTER'
+musterButton.addEventListener('click', musterFunction)
+
+const sowButton = document.createElement('button')
+sowButton.classList.add('command')
+sowButton.innerText = 'SOW'
+sowButton.addEventListener('click', sowFunction)
+
+const cancelButton = document.createElement('button')
+cancelButton.classList.add('command')
+cancelButton.innerText = 'CANCEL'
+cancelButton.addEventListener('click', cancelFunction)
+
+let selectedTerritory = null
+let playerPriests = 0
 
 
 // random map generation, returns both DOM element and array of territory objects
@@ -99,6 +247,7 @@ const createMap = () => {
     // create the game map top level DOM element
     const gameMapDOM = document.createElement('div')
     gameMapDOM.setAttribute('id', 'Game-Map')
+    gameMapDOM.style.borderRadius = '25px'
 
     // an array of all Territories
     let mapArray = []
@@ -160,4 +309,4 @@ gameMap[1].forEach(origin => {
 })
 
 console.log(gameMap)
-map.appendChild(gameMap[0])
+mapDiv.appendChild(gameMap[0])
