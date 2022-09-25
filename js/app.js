@@ -37,6 +37,7 @@ class Territory {
     }
     owner = ''
     unitsPresent = []
+    domObject = null
     // adjacents = []
 }
 
@@ -52,6 +53,7 @@ class Unit {
     upkeepCost = 0
     powers = []
     fatigued = false
+    domObject = null
 }
 
 
@@ -84,13 +86,11 @@ const highlightSelect = (e) => {
     if (e.target.style.borderColor !== 'yellow') {
         e.target.style.borderColor = 'yellow'
         marchingUnits.push(e.target.classList.value)
-        console.log(marchingUnits)
     }
     else {
         e.target.style.borderColor = 'black'
         let index = marchingUnits.indexOf(e.target.classList.value)
         marchingUnits.splice(index, 1)
-        console.log(marchingUnits)
     }
 }
 
@@ -139,8 +139,10 @@ const confirmFunction = () => {
             if (!territoryClicked.owner || territoryStored.owner === territoryClicked.owner) {
                 // move em in
                 unitsMarchIn()
-                territoryClicked.owner = territoryStored.owner
                 cancelFunction()
+            }
+            else {
+                unitsFight()
             }
             break
         case ('muster'):
@@ -155,12 +157,100 @@ const unitsMarchIn = () => {
 
     // move marching units from origin territory unitsPresent list to corresponding destination
     marchingUnits.forEach(marcher => {
-        index = territoryStored.unitsPresent.map(unit => {return unit.type}).indexOf(marcher)
+        index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf(marcher)
         territoryClicked.unitsPresent.push(territoryStored.unitsPresent.splice(index, 1)[0])
 
         // reflect above change in the DOM
         territoryClickedDOM.appendChild(territoryStoredDOM.querySelector(`.${marcher}`))
     })
+    territoryClicked.owner = territoryStored.owner
+    territoryClickedDOM.style.borderColor = territoryStoredDOM.style.borderColor
+}
+
+
+const unitsFight = () => {
+    attackingStr = 0
+    defendingStr = 0
+
+    // tally strength of attacking and defending units,
+    // needs rewriting if more unit types exist or variable strength on units
+    marchingUnits.forEach(marcher => {
+        if (marcher === 'priest') {
+            attackingStr++
+        }
+        else {
+            attackingStr += 2
+        }
+    })
+    territoryClicked.unitsPresent.forEach(defender => {
+        if (defender.type === 'priest') {
+            defendingStr++
+        }
+        else if (defender.type === 'soldier') {
+            defendingStr += 2
+        }
+    })
+
+    while (menuDiv.firstChild) {
+        menuDiv.removeChild(menuDiv.firstChild)
+    }
+    menuDiv.innerText = 'Select a combat formation. Each formation is a die with special faces. Some dice have advantages over others, but none is best. The computer will always choose the same die.\n\n'
+    for (const die in dice) {
+        if (parseInt(die)) {
+            let dieButton = document.createElement('button')
+            dieButton.innerText = `${die}`
+            dieButton.addEventListener('click', () => {
+                diceRoll = dice.roll(die)
+                enemyRoll = dice.roll('222777')
+                fightResult(attackingStr, defendingStr)
+            })
+            menuDiv.appendChild(dieButton)
+        }
+    }
+}
+
+const fightResult = (att, def) => {
+    while (menuDiv.firstChild) {
+        menuDiv.removeChild(menuDiv.firstChild)
+    }
+    let verbage = ''
+    if (diceRoll > enemyRoll) {
+        let baseAtt = att
+        att *= 2
+        verbage = `\nYour attackers had a strength of ${baseAtt}\nYou rolled a ${diceRoll}\nThe defenders had a strength of ${def}\nThey rolled a ${enemyRoll}\nYou win the die roll, doubling your strength to ${att}!`
+    }
+    else {
+        let baseDef = def
+        def *= 2
+        verbage = `\nYour attackers had a strength of ${att}\nYou rolled a ${diceRoll}\nThe defenders had a strength of ${baseDef}\nThey rolled a ${enemyRoll}\nYour enemy wins the die roll, doubling their strength to ${def}!`
+    }
+    if (att > def) {
+        menuDiv.innerText = `${verbage}\nYou win the battle.\nYour enemies are slain to the last.`
+        territoryClicked.unitsPresent = territoryClicked.unitsPresent.filter(unit => {
+            if (unit.owner = 'enemy') {
+                territoryClickedDOM.removeChild(unit.domObject)
+            }
+            else {
+                return true
+            }
+        })
+        unitsMarchIn()
+    }
+    else if (def > att) {
+        menuDiv.innerText = `${verbage}\nYou lose the battle.\nYour followers are slain to the last.`
+        marchingUnits.forEach(marcher => {
+            index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf(marcher)
+            territoryStored.unitsPresent.splice(index, 1)
+
+            // reflect above change in the DOM
+            territoryStoredDOM.removeChild(territoryStoredDOM.querySelector(`.${marcher}`))
+        })
+    }
+    territoryStored = null
+    territoryStoredDOM = null
+    territoryClicked = null
+    territoryClickedDOM = null
+    terrClickState = 'main-game'
 }
 
 
@@ -175,7 +265,6 @@ const territoryClick = (e) => {
         return (territory.mapId[0] === coordinates[0] && territory.mapId[1] === coordinates[1])
     })
     territoryClickedDOM = e.target
-    console.log(territoryClickedDOM)
 
     // get list of player Priests
     playerPriests = player.units.filter(unit => {
@@ -187,7 +276,7 @@ const territoryClick = (e) => {
     switch (terrClickState) {
 
         // At the start of the game you choose two territories and place priests there
-        case ('start-game'):territoryClicked
+        case ('start-game'):
             // create a Priest
             let priestObj = new Unit('priest', coordinates)
             priestObj.owner = player.playerId
@@ -196,18 +285,37 @@ const territoryClick = (e) => {
 
             // add priest object to territory object and player's lists of units
             territoryClicked.owner = player.playerId
+            territoryClickedDOM.style.borderColor = 'blue'
             territoryClicked.unitsPresent.push(priestObj)
             player.units.push(priestObj)
 
             // create priest DOM element and add to territory div
             const priestDOM = document.createElement('div')
             priestDOM.classList.add('priest')
+            priestObj.domObject = priestDOM
             e.target.appendChild(priestDOM)
 
             // check if start-of-game is over
             if (player.units.length >= 3) {
                 // change the clicking switch
                 terrClickState = 'main-game'
+
+                // TODO create enemy units and place in territory
+                enemyTerritory = gameMap[1].find(territory => !territory.owner)
+                enemyTerritory.owner = 'enemy'
+                for (i = 0; i < randomRange(4, 6); i++) {
+                    let enemySoldier = new Unit('soldier', enemyTerritory.mapId)
+                    enemySoldier.owner = 'enemy'
+                    enemySoldier.strength = 2
+                    enemySoldier.upkeepCost = 1
+                    let soldierDOM = document.createElement('div')
+                    soldierDOM.classList.add('soldier')
+                    enemySoldier.domObject = soldierDOM
+                    enemyTerritory.unitsPresent.push(enemySoldier)
+                    enemyTerritory.domObject.appendChild(soldierDOM)
+                }
+                enemyTerritory.domObject.style.borderColor = 'red'
+
 
                 // clear the starting text from action menu
                 while (menuDiv.firstChild) {
@@ -225,9 +333,16 @@ const territoryClick = (e) => {
                 territoryStored = territoryClicked
                 territoryStoredDOM = territoryClickedDOM
                 menuDiv.innerText = 'Select a Command\n\n'
-                menuDiv.appendChild(marchButton)
-                menuDiv.appendChild(musterButton)
-                menuDiv.appendChild(sowButton)
+                let unitsInClicked = territoryClicked.unitsPresent.map(unit => { return unit.type })
+                if (unitsInClicked.includes('priest') || unitsInClicked.includes('soldier')) {
+                    menuDiv.appendChild(marchButton)
+                }
+                if (unitsInClicked.includes('priest') && unitsInClicked.includes('peasant')) {
+                    menuDiv.appendChild(musterButton)
+                }
+                if (unitsInClicked.includes('peasant')) {
+                    menuDiv.appendChild(sowButton)
+                }
             }
             else {
                 while (menuDiv.firstChild) {
@@ -325,6 +440,10 @@ let territoryClickedDOM = null
 let playerPriests = 0
 let marchingUnits = []
 let confirm = ''
+let attackingStr = 0
+let defendingStr = 0
+diceRoll = 0
+enemyRoll = 0
 
 
 // random map generation, returns both DOM element and array of territory objects
@@ -363,12 +482,19 @@ const createMap = () => {
 
                 // create peasant unit and append to territory's unitsPresent
                 let peasantObj = new Unit('peasant', [j, i])
+                peasantObj.domObject = peasantDOM
                 territoryObj.unitsPresent.push(peasantObj)
             }
+
+            // make life easier
+            territoryObj.domObject = territoryDiv
 
             // add new territory DOM element and object to their respective collections
             mapRow.appendChild(territoryDiv)
             mapArray.push(territoryObj)
+
+            // save this for later
+            lastTerritory = [j + 1, i + 1]
         }
 
         // append new row of territories to the game map
@@ -378,10 +504,8 @@ const createMap = () => {
 }
 
 
-// Create Starting State
+// Create Starting State of Game + one enemy territory
 const gameMap = createMap()
-// const mapDOM = gameMap[0]
-// let mapArray = gameMap[1]
 
 
 // // creates and adds lists of adjacent territories to each territory
@@ -393,5 +517,4 @@ const gameMap = createMap()
 //     })
 // })
 
-console.log(gameMap)
 mapDiv.appendChild(gameMap[0])

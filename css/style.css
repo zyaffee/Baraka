@@ -56,6 +56,7 @@ body {
 
 .territory {
     display: flex;
+    flex-wrap: wrap;
     background-color: green;
     width: 70px;
     height: 70px;
