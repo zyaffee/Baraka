@@ -18,13 +18,15 @@ body {
 
 #Game-Map {
     display: flex;
-    background-color: aqua;
+    background-color: blue;
     height: 100%;
     width: 80%;
+    padding-left: 40px;
 }
 
 #Action-Menu {
-    background-color: green;
+    background-color: black;
+    color: aquamarine;
     height: 100%;
     width: 20%;
 }
@@ -37,7 +39,7 @@ body {
 
 #Status-Bar {
     display: flex;
-    background-color: blue;
+    background-color: gray;
     height: 100%;
     width: 80%;
 }
@@ -75,14 +77,14 @@ body {
     display: flex;
     background-color: rgb(95, 95, 95);
     width: 5px;
-    height: 5px;
+    height: 8px;
     border: solid black;
 }
 
 .soldier {
     display: flex;
-    background-color: orange;
+    background-color: red;
     width: 5px;
-    height: 5px;
+    height: 8px;
     border: solid black;
 }

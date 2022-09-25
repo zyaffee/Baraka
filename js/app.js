@@ -94,6 +94,7 @@ const highlightSelect = (e) => {
     }
 }
 
+
 const marchSwitch = () => {
     if (terrClickState !== 'march-select') {
         terrClickState = 'march-select'
@@ -106,15 +107,78 @@ const marchSwitch = () => {
 }
 
 const musterFunction = () => {
-    if (terrClickState !== 'muster-select') {
-        terrClickState = 'muster-select'
+    const musterPriestButton = document.createElement('button')
+    musterPriestButton.innerText = 'Muster Priest'
+    musterPriestButton.addEventListener('click', musterPriest)
+
+    const musterSoldierButton = document.createElement('button')
+    musterSoldierButton.innerText = 'Muster Soldier'
+    musterSoldierButton.addEventListener('click', musterSoldier)
+
+    while (menuDiv.firstChild) {
+        menuDiv.removeChild(menuDiv.firstChild)
     }
+    menuDiv.innerText = '\nChoose to train a Priest or a Soldier\n'
+    menuDiv.appendChild(musterPriestButton)
+    menuDiv.appendChild(musterSoldierButton)
+    menuDiv.appendChild(cancelButton)
 }
 
+
+const musterPriest = () => {
+
+    // turn a peasant into a priest
+    console.log('mustering Priest')
+    index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf('peasant')
+    territoryStoredDOM.removeChild(territoryStored.unitsPresent[index].domObject)
+    territoryStored.unitsPresent.splice(index, 1)
+    let newPriestObj = new Unit('priest', territoryStored.mapId)
+    newPriestObj.owner = player.playerId
+    newPriestObj.strength = 1
+    newPriestObj.upkeepCost = 1
+    newPriestObj.domObject = document.createElement('div')
+    newPriestObj.domObject.classList.add('priest')
+    territoryStoredDOM.appendChild(newPriestObj.domObject)
+    territoryStored.unitsPresent.push(newPriestObj)
+    cancelFunction()
+}
+
+const musterSoldier = () => {
+
+    // turn a peasant into a soldier
+    console.log('mustering Soldier')
+    index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf('peasant')
+    territoryStoredDOM.removeChild(territoryStored.unitsPresent[index].domObject)
+    territoryStored.unitsPresent.splice(index, 1)
+    let newSoldierObj = new Unit('soldier', territoryStored.mapId)
+    newSoldierObj.owner = player.playerId
+    newSoldierObj.strength = 2
+    newSoldierObj.upkeepCost = 1
+    newSoldierObj.domObject = document.createElement('div')
+    newSoldierObj.domObject.classList.add('soldier')
+    territoryStoredDOM.appendChild(newSoldierObj.domObject)
+    territoryStored.unitsPresent.push(newSoldierObj)
+    cancelFunction()
+}
+
+
 const sowFunction = () => {
-    if (terrClickState !== 'sow-select') {
-        terrClickState = 'sow-select'
-    }
+    // Create peasant DOM element and append to territory
+    const peasantDOM = document.createElement('div')
+    peasantDOM.classList.add('peasant')
+    territoryStoredDOM.appendChild(peasantDOM)
+
+    // create peasant unit and append to territory's unitsPresent
+    let peasantObj = new Unit('peasant', territoryStored.mapId)
+    peasantObj.domObject = peasantDOM
+    territoryStored.unitsPresent.push(peasantObj)
+
+    // restore land
+    territoryStored.food += 2
+
+    cancelFunction()
+    menuDiv.innerText = 'The land has regenerated and peasants have returned.'
+
 }
 
 const cancelFunction = () => {
@@ -146,8 +210,6 @@ const confirmFunction = () => {
             }
             break
         case ('muster'):
-            break
-        case ('sow'):
             break
     }
 }
@@ -227,10 +289,12 @@ const fightResult = (att, def) => {
     if (att > def) {
         menuDiv.innerText = `${verbage}\nYou win the battle.\nYour enemies are slain to the last.`
         territoryClicked.unitsPresent = territoryClicked.unitsPresent.filter(unit => {
-            if (unit.owner = 'enemy') {
+            if (unit.owner === 'enemy') {
+                console.log('this is an enemy')
                 territoryClickedDOM.removeChild(unit.domObject)
             }
             else {
+                console.log('this is not')
                 return true
             }
         })
@@ -303,7 +367,7 @@ const territoryClick = (e) => {
                 // TODO create enemy units and place in territory
                 enemyTerritory = gameMap[1].find(territory => !territory.owner)
                 enemyTerritory.owner = 'enemy'
-                for (i = 0; i < randomRange(4, 6); i++) {
+                for (i = 0; i < randomRange(1, 2); i++) {
                     let enemySoldier = new Unit('soldier', enemyTerritory.mapId)
                     enemySoldier.owner = 'enemy'
                     enemySoldier.strength = 2
@@ -314,6 +378,15 @@ const territoryClick = (e) => {
                     enemyTerritory.unitsPresent.push(enemySoldier)
                     enemyTerritory.domObject.appendChild(soldierDOM)
                 }
+                let ePriest = new Unit('priest', enemyTerritory.mapId)
+                ePriest.owner = 'enemy'
+                ePriest.strength = 1
+                ePriest.upkeepCost = 1
+                let ePriestDOM = document.createElement('div')
+                ePriestDOM.classList.add('priest')
+                ePriest.domObject = ePriestDOM
+                enemyTerritory.unitsPresent.push(ePriest)
+                enemyTerritory.domObject.appendChild(ePriestDOM)
                 enemyTerritory.domObject.style.borderColor = 'red'
 
 
@@ -444,6 +517,7 @@ let attackingStr = 0
 let defendingStr = 0
 diceRoll = 0
 enemyRoll = 0
+
 
 
 // random map generation, returns both DOM element and array of territory objects
