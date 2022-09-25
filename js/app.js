@@ -128,7 +128,6 @@ const musterFunction = () => {
 const musterPriest = () => {
 
     // turn a peasant into a priest
-    console.log('mustering Priest')
     index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf('peasant')
     territoryStoredDOM.removeChild(territoryStored.unitsPresent[index].domObject)
     territoryStored.unitsPresent.splice(index, 1)
@@ -146,7 +145,6 @@ const musterPriest = () => {
 const musterSoldier = () => {
 
     // turn a peasant into a soldier
-    console.log('mustering Soldier')
     index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf('peasant')
     territoryStoredDOM.removeChild(territoryStored.unitsPresent[index].domObject)
     territoryStored.unitsPresent.splice(index, 1)
@@ -288,13 +286,13 @@ const fightResult = (att, def) => {
     }
     if (att > def) {
         menuDiv.innerText = `${verbage}\nYou win the battle.\nYour enemies are slain to the last.`
+
+        // kill the defending unit objects and reflect in DOM
         territoryClicked.unitsPresent = territoryClicked.unitsPresent.filter(unit => {
             if (unit.owner === 'enemy') {
-                console.log('this is an enemy')
                 territoryClickedDOM.removeChild(unit.domObject)
             }
             else {
-                console.log('this is not')
                 return true
             }
         })
@@ -303,6 +301,8 @@ const fightResult = (att, def) => {
     else if (def > att) {
         menuDiv.innerText = `${verbage}\nYou lose the battle.\nYour followers are slain to the last.`
         marchingUnits.forEach(marcher => {
+
+            // kill the attacking unit objects
             index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf(marcher)
             territoryStored.unitsPresent.splice(index, 1)
 
@@ -320,8 +320,10 @@ const fightResult = (att, def) => {
 
 // handles when territory is clicked
 const territoryClick = (e) => {
+
     // Get territory's ID and convert into usable coordinates
     let mapIdString = e.target.getAttribute('id')
+    if (!mapIdString) {return} //avoids error from clicking on unit divs
     let coordinates = [parseInt(mapIdString[0]), parseInt(mapIdString[3])]
 
     // get territory object and DOM element
