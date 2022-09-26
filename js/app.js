@@ -344,7 +344,7 @@ const territoryClick = (e) => {
 
             // add priest object to territory object and player's lists of units
             territoryClicked.owner = player.playerId
-            territoryClickedDOM.style.borderColor = 'blue'
+            territoryClickedDOM.style.borderColor = 'purple'
             territoryClicked.unitsPresent.push(priestObj)
             player.units.push(priestObj)
 
