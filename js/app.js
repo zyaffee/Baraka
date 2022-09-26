@@ -323,7 +323,7 @@ const territoryClick = (e) => {
 
     // Get territory's ID and convert into usable coordinates
     let mapIdString = e.target.getAttribute('id')
-    if (!mapIdString) {return} //avoids error from clicking on unit divs
+    if (!mapIdString) { return } //avoids error from clicking on unit divs
     let coordinates = [parseInt(mapIdString[0]), parseInt(mapIdString[3])]
 
     // get territory object and DOM element
@@ -331,13 +331,6 @@ const territoryClick = (e) => {
         return (territory.mapId[0] === coordinates[0] && territory.mapId[1] === coordinates[1])
     })
     territoryClickedDOM = e.target
-
-    // get list of player Priests
-    playerPriests = player.units.filter(unit => {
-        if (unit.type === 'priest') {
-            return unit
-        }
-    })
 
     switch (terrClickState) {
 
@@ -401,6 +394,27 @@ const territoryClick = (e) => {
 
         // neutral state of game waiting for player input
         case ('main-game'):
+
+            let gameOverPlayer1 = true
+            let gameOverEnemy = true
+            gameMap[1].forEach(territory => {
+                if (territory.unitsPresent.map(unit => { return unit.owner }).includes('player1')) {
+                    gameOverPlayer1 = false
+                }
+                if (territory.unitsPresent.map(unit => { return unit.owner }).includes('enemy')) {
+                    gameOverEnemy = false
+                }
+            })
+
+            if (gameOverPlayer1) {
+                terrClickState = 'player-loses'
+                territoryClick(e)
+            }
+            if (gameOverEnemy) {
+                terrClickState = 'player-wins'
+                territoryClick(e)
+            }
+
             if (territoryClicked.owner === player.playerId) {
                 while (menuDiv.firstChild) {
                     menuDiv.removeChild(menuDiv.firstChild)
@@ -473,6 +487,25 @@ const territoryClick = (e) => {
             }
             break
 
+        case ('player-loses'):
+            while (menuDiv.firstChild) {
+                menuDiv.removeChild(menuDiv.firstChild)
+            }
+            while (mapDiv.firstChild) {
+                mapDiv.removeChild(mapDiv.firstChild)
+            }
+            mapDiv.innerText = 'YOU LOSE'
+            break
+
+        case ('player-wins'):
+            while (menuDiv.firstChild) {
+                menuDiv.removeChild(menuDiv.firstChild)
+            }
+            while (mapDiv.firstChild) {
+                mapDiv.removeChild(mapDiv.firstChild)
+            }
+            mapDiv.innerText = 'YOU WIN'
+            break
         default:
             break
     }
@@ -512,7 +545,6 @@ let territoryStored = null
 let territoryStoredDOM = null
 let territoryClicked = null
 let territoryClickedDOM = null
-let playerPriests = 0
 let marchingUnits = []
 let confirm = ''
 let attackingStr = 0
