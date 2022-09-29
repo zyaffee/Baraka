@@ -62,7 +62,7 @@ const randomRange = (min, max) => {
     return Math.floor(Math.random() * (max + 1 - min) + min)
 }
 
-
+//You have great comments throughout your code!
 // check if two territory objects are adjacent
 const isAdjacent = (terr1, terr2) => {
     if (terr1.mapId[0] === terr2.mapId[0]) {
@@ -511,7 +511,7 @@ const territoryClick = (e) => {
     }
 }
 
-
+//It makes your file a little more organized if you place your variable declarations at the top
 const mapDiv = document.getElementById('Game-Map')
 const menuDiv = document.getElementById('Action-Menu')
 const statusDiv = document.getElementById('Status-Bar')
