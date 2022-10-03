@@ -44,16 +44,16 @@ class Territory {
 
 // base class of all units
 class Unit {
-    constructor(type, location) {
+    constructor(type, owner, location, strength, upkeepCost, domObject) {
         this.type = type,
-            this.location = location
+        this.location = location,
+        this.owner = owner
+        this.strength = strength
+        this.upkeepCost = upkeepCost
+        this.domObject = domObject
     }
-    owner = ''
-    strength = 0
-    upkeepCost = 0
     powers = []
     fatigued = false
-    domObject = null
 }
 
 
@@ -95,6 +95,7 @@ const highlightSelect = (e) => {
 }
 
 
+// ask where you want to march and adjust clicking functionality
 const marchSwitch = () => {
     if (terrClickState !== 'march-select') {
         terrClickState = 'march-select'
@@ -106,6 +107,8 @@ const marchSwitch = () => {
     }
 }
 
+
+// show the mustering buttons
 const musterFunction = () => {
     const musterPriestButton = document.createElement('button')
     musterPriestButton.innerText = 'Muster Priest'
@@ -131,14 +134,7 @@ const musterPriest = () => {
     index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf('peasant')
     territoryStoredDOM.removeChild(territoryStored.unitsPresent[index].domObject)
     territoryStored.unitsPresent.splice(index, 1)
-    let newPriestObj = new Unit('priest', territoryStored.mapId)
-    newPriestObj.owner = player.playerId
-    newPriestObj.strength = 1
-    newPriestObj.upkeepCost = 1
-    newPriestObj.domObject = document.createElement('div')
-    newPriestObj.domObject.classList.add('priest')
-    territoryStoredDOM.appendChild(newPriestObj.domObject)
-    territoryStored.unitsPresent.push(newPriestObj)
+    createUnit('priest', player, territoryStored)
     cancelFunction()
 }
 
@@ -148,14 +144,7 @@ const musterSoldier = () => {
     index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf('peasant')
     territoryStoredDOM.removeChild(territoryStored.unitsPresent[index].domObject)
     territoryStored.unitsPresent.splice(index, 1)
-    let newSoldierObj = new Unit('soldier', territoryStored.mapId)
-    newSoldierObj.owner = player.playerId
-    newSoldierObj.strength = 2
-    newSoldierObj.upkeepCost = 1
-    newSoldierObj.domObject = document.createElement('div')
-    newSoldierObj.domObject.classList.add('soldier')
-    territoryStoredDOM.appendChild(newSoldierObj.domObject)
-    territoryStored.unitsPresent.push(newSoldierObj)
+    createUnit('soldier', player, territoryStored)
     cancelFunction()
 }
 
@@ -344,7 +333,7 @@ const territoryClick = (e) => {
 
             // add priest object to territory object and player's lists of units
             territoryClicked.owner = player.playerId
-            territoryClickedDOM.style.borderColor = 'purple'
+            territoryClickedDOM.style.borderColor = 'blue'
             territoryClicked.unitsPresent.push(priestObj)
             player.units.push(priestObj)
 
@@ -512,6 +501,82 @@ const territoryClick = (e) => {
 }
 
 
+const createUnit = (typeString, playerObj, territoryObj) => {
+
+    const unitDom = document.createElement('div')
+    unitDom.classList.add(typeString)
+
+    let strength = 0
+    let upkeepCost = 0
+    let id = ''
+    if (playerObj) id = playerObj.playerId
+
+    switch (typeString) {
+        case ('priest'):
+            strength = 1
+            upkeepCost = 1
+            break
+        case ('soldier'):
+            strength = 2
+            upkeepCost = 2
+            break
+        default:
+            break
+    }
+    
+    let newUnit = new Unit (typeString, id, territoryObj.mapId, strength, upkeepCost, unitDom)
+    if (playerObj) playerObj.units.push(newUnit)
+    territoryObj.unitsPresent.push(newUnit)
+    territoryObj.domObject.appendChild(unitDom)
+}
+
+
+// random map generation, returns both DOM element and array of territory objects
+const createMap = () => {
+    // create the game map top level DOM element
+    const gameMapDOM = document.createElement('div')
+    gameMapDOM.setAttribute('id', 'Game-Map')
+    gameMapDOM.style.borderRadius = '22.5px'
+
+    // an array of all Territories
+    let mapArray = []
+
+    // create each row of territories in map
+    for (let i = 0; i < randomRange(4, 7); i++) {
+        const mapRow = document.createElement('div')
+        mapRow.classList.add('map-row')
+
+        // create each territory DOM element in this row
+        for (let j = 0; j < randomRange(1, 5); j++) {
+
+            // Create territory DOM element
+            const territoryDiv = document.createElement('div')
+            territoryDiv.classList.add('territory')
+            territoryDiv.setAttribute('id', `${j}, ${i}`)
+            territoryDiv.addEventListener('click', territoryClick)
+
+            // Create territory object
+            const territoryObj = new Territory([j, i], randomRange(2, 4), randomRange(4, 6))
+
+            // make life easier
+            territoryObj.domObject = territoryDiv
+
+            // Populate territory with initial peasant population
+            for (let k = 0; k < territoryObj.nativePop; k++) {
+                createUnit('peasant', null, territoryObj)
+            }
+
+            // add new territory DOM element and object to their respective collections
+            mapRow.appendChild(territoryDiv)
+            mapArray.push(territoryObj)
+        }
+
+        // append new row of territories to the game map
+        gameMapDOM.appendChild(mapRow)
+    }
+    return [gameMapDOM, mapArray]
+}
+
 const mapDiv = document.getElementById('Game-Map')
 const menuDiv = document.getElementById('Action-Menu')
 const statusDiv = document.getElementById('Status-Bar')
@@ -551,65 +616,6 @@ let attackingStr = 0
 let defendingStr = 0
 diceRoll = 0
 enemyRoll = 0
-
-
-
-// random map generation, returns both DOM element and array of territory objects
-const createMap = () => {
-    // create the game map top level DOM element
-    const gameMapDOM = document.createElement('div')
-    gameMapDOM.setAttribute('id', 'Game-Map')
-    gameMapDOM.style.borderRadius = '25px'
-
-    // an array of all Territories
-    let mapArray = []
-
-    // create each row of territories in map
-    for (let i = 0; i < randomRange(4, 7); i++) {
-        const mapRow = document.createElement('div')
-        mapRow.classList.add('map-row')
-
-        // create each territory DOM element in this row
-        for (let j = 0; j < randomRange(1, 5); j++) {
-
-            // Create territory DOM element
-            const territoryDiv = document.createElement('div')
-            territoryDiv.classList.add('territory')
-            territoryDiv.setAttribute('id', `${j}, ${i}`)
-            territoryDiv.addEventListener('click', territoryClick)
-
-            // Create territory object
-            const territoryObj = new Territory([j, i], randomRange(2, 4), randomRange(4, 6))
-
-            // Populate territory with initial peasant population
-            for (let k = 0; k < territoryObj.nativePop; k++) {
-                // Create peasant DOM element and append to territory
-                const peasantDOM = document.createElement('div')
-                peasantDOM.classList.add('peasant')
-                territoryDiv.appendChild(peasantDOM)
-
-                // create peasant unit and append to territory's unitsPresent
-                let peasantObj = new Unit('peasant', [j, i])
-                peasantObj.domObject = peasantDOM
-                territoryObj.unitsPresent.push(peasantObj)
-            }
-
-            // make life easier
-            territoryObj.domObject = territoryDiv
-
-            // add new territory DOM element and object to their respective collections
-            mapRow.appendChild(territoryDiv)
-            mapArray.push(territoryObj)
-
-            // save this for later
-            lastTerritory = [j + 1, i + 1]
-        }
-
-        // append new row of territories to the game map
-        gameMapDOM.appendChild(mapRow)
-    }
-    return [gameMapDOM, mapArray]
-}
 
 
 // Create Starting State of Game + one enemy territory
