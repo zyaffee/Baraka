@@ -189,6 +189,12 @@ const cancelFunction = () => {
 // restart the game
 const restartFunction = () => {
     cancelFunction()
+    player = {
+        playerId: 'player1',
+        territories: [],
+        units: [],
+        commandsRemaining: 0
+    }
     while (mapDiv.firstChild) {
         mapDiv.removeChild(mapDiv.firstChild)
     }
@@ -317,6 +323,7 @@ const fightResult = (att, def) => {
             territoryStoredDOM.removeChild(territoryStoredDOM.querySelector(`.${marcher}`))
         })
     }
+    
     territoryStored = null
     territoryStoredDOM = null
     territoryClicked = null
