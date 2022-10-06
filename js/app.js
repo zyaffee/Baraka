@@ -20,14 +20,6 @@ const dice = {
 }
 
 
-// turn counter
-let turnCount = 0
-
-
-// territory click state
-let terrClickState = 'start-game'
-
-
 // class for each map node
 class Territory {
     constructor(mapId, nativePop, food) {
@@ -82,6 +74,7 @@ const isAdjacent = (terr1, terr2) => {
 }
 
 
+// handles selection of units for marching
 const highlightSelect = (e) => {
     if (e.target.style.borderColor !== 'yellow') {
         e.target.style.borderColor = 'yellow'
@@ -128,16 +121,21 @@ const musterFunction = () => {
 }
 
 
+// convert a peasant into your priest
 const musterPriest = () => {
 
-    // turn a peasant into a priest
+    // find a peasant in territory and delete its object and DOM
     index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf('peasant')
     territoryStoredDOM.removeChild(territoryStored.unitsPresent[index].domObject)
     territoryStored.unitsPresent.splice(index, 1)
+
+    // create a priest unit in its place
     createUnit('priest', player, territoryStored)
     cancelFunction()
 }
 
+
+// see musterPriest
 const musterSoldier = () => {
 
     // turn a peasant into a soldier
@@ -149,6 +147,7 @@ const musterSoldier = () => {
 }
 
 
+// command for regenerating a territory
 const sowFunction = () => {
     // Create peasant DOM element and append to territory
     const peasantDOM = document.createElement('div')
@@ -165,20 +164,41 @@ const sowFunction = () => {
 
     cancelFunction()
     menuDiv.innerText = 'The land has regenerated and peasants have returned.'
-
 }
 
+
+// return to more neutral game state
 const cancelFunction = () => {
     territoryStored = null
     territoryStoredDOM = null
     territoryClicked = null
     territoryClickedDOM = null
+    marchingUnits = []
+    confirm = ''
+    attackingStr = 0
+    defendingStr = 0
+    diceRoll = 0
+    enemyRoll = 0
     terrClickState = 'main-game'
     while (menuDiv.firstChild) {
         menuDiv.removeChild(menuDiv.firstChild)
     }
 }
 
+
+// restart the game
+const restartGame = () => {
+    cancelFunction()
+    while (mapDiv.firstChild) {
+        mapDiv.removeChild(mapDiv.firstChild)
+    }
+    terrClickState = 'start-game'
+    gameMap = createMap()
+    mapDiv.appendChild(gameMap[0])
+}
+
+
+// handles marching confirmation, potentially more commands
 const confirmFunction = () => {
     switch (confirm) {
         case ('march'):
@@ -202,10 +222,13 @@ const confirmFunction = () => {
 }
 
 
+// when your march command encounters no opposition
 const unitsMarchIn = () => {
 
     // move marching units from origin territory unitsPresent list to corresponding destination
     marchingUnits.forEach(marcher => {
+
+        // find the marching unit and move it from the origin to the destination
         index = territoryStored.unitsPresent.map(unit => { return unit.type }).indexOf(marcher)
         territoryClicked.unitsPresent.push(territoryStored.unitsPresent.splice(index, 1)[0])
 
@@ -217,29 +240,23 @@ const unitsMarchIn = () => {
 }
 
 
+// when your march enounters opposition
 const unitsFight = () => {
+
+    // tallies for deciding outcome
     attackingStr = 0
     defendingStr = 0
 
-    // tally strength of attacking and defending units,
-    // needs rewriting if more unit types exist or variable strength on units
+    // tally strength of attacking and defending units
     marchingUnits.forEach(marcher => {
-        if (marcher === 'priest') {
-            attackingStr++
-        }
-        else {
-            attackingStr += 2
-        }
+        if (marcher == 'priest') attackingStr += 1
+        if (marcher == 'soldier') attackingStr += 2
     })
     territoryClicked.unitsPresent.forEach(defender => {
-        if (defender.type === 'priest') {
-            defendingStr++
-        }
-        else if (defender.type === 'soldier') {
-            defendingStr += 2
-        }
+        defendingStr += defender.strength
     })
 
+    // display dice choices in menu
     while (menuDiv.firstChild) {
         menuDiv.removeChild(menuDiv.firstChild)
     }
@@ -257,6 +274,7 @@ const unitsFight = () => {
         }
     }
 }
+
 
 const fightResult = (att, def) => {
     while (menuDiv.firstChild) {
@@ -325,23 +343,13 @@ const territoryClick = (e) => {
 
         // At the start of the game you choose two territories and place priests there
         case ('start-game'):
-            // create a Priest
-            let priestObj = new Unit('priest', coordinates)
-            priestObj.owner = player.playerId
-            priestObj.strength = 1
-            priestObj.upkeepCost = 1
 
-            // add priest object to territory object and player's lists of units
+            // spawn priest in chosen territory
+            createUnit('priest', player, territoryClicked)
+
+            // claim the territory for the player
             territoryClicked.owner = player.playerId
-            territoryClickedDOM.style.borderColor = 'blue'
-            territoryClicked.unitsPresent.push(priestObj)
-            player.units.push(priestObj)
-
-            // create priest DOM element and add to territory div
-            const priestDOM = document.createElement('div')
-            priestDOM.classList.add('priest')
-            priestObj.domObject = priestDOM
-            e.target.appendChild(priestDOM)
+            territoryClickedDOM.style.borderColor = 'purple'
 
             // check if start-of-game is over
             if (player.units.length >= 3) {
@@ -501,6 +509,7 @@ const territoryClick = (e) => {
 }
 
 
+// create unit obj and dom, add to territory, add to player
 const createUnit = (typeString, playerObj, territoryObj) => {
 
     const unitDom = document.createElement('div')
@@ -577,9 +586,16 @@ const createMap = () => {
     return [gameMapDOM, mapArray]
 }
 
+
+// decides what happens when you click a territory
+let terrClickState = 'start-game'
+
+
+// instantiate visual elements and buttons for the game screen
 const mapDiv = document.getElementById('Game-Map')
 const menuDiv = document.getElementById('Action-Menu')
-const statusDiv = document.getElementById('Status-Bar')
+const statusDiv = document.getElementById('Status')
+const restartDiv = document.getElementById('Restart')
 
 const marchButton = document.createElement('button')
 marchButton.classList.add('command')
@@ -606,6 +622,10 @@ confirmButton.classList.add('command')
 confirmButton.innerText = 'CONFIRM'
 confirmButton.addEventListener('click', confirmFunction)
 
+const restartButton = document.createElement('button')
+
+
+// game variables
 let territoryStored = null
 let territoryStoredDOM = null
 let territoryClicked = null
@@ -614,12 +634,12 @@ let marchingUnits = []
 let confirm = ''
 let attackingStr = 0
 let defendingStr = 0
-diceRoll = 0
-enemyRoll = 0
+let diceRoll = 0
+let enemyRoll = 0
 
 
 // Create Starting State of Game + one enemy territory
-const gameMap = createMap()
+let gameMap = createMap()
 
 
 // // creates and adds lists of adjacent territories to each territory

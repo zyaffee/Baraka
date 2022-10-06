@@ -37,14 +37,14 @@ body {
     width: 100%;
 }
 
-#Status-Bar {
+#Status {
     display: flex;
     background-color: gray;
     height: 100%;
     width: 80%;
 }
 
-#Quit-Bar {
+#Restart {
     display: flex;
     background-color: rgb(156, 156, 156);
     height: 100%;
