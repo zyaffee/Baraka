@@ -187,7 +187,7 @@ const cancelFunction = () => {
 
 
 // restart the game
-const restartGame = () => {
+const restartFunction = () => {
     cancelFunction()
     while (mapDiv.firstChild) {
         mapDiv.removeChild(mapDiv.firstChild)
@@ -623,6 +623,9 @@ confirmButton.innerText = 'CONFIRM'
 confirmButton.addEventListener('click', confirmFunction)
 
 const restartButton = document.createElement('button')
+restartButton.classList.add('command')
+restartButton.innerText = 'RESTART'
+restartButton.addEventListener('click', restartFunction)
 
 
 // game variables
@@ -652,3 +655,4 @@ let gameMap = createMap()
 // })
 
 mapDiv.appendChild(gameMap[0])
+restartDiv.appendChild(restartButton)
