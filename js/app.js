@@ -1,3 +1,9 @@
+/////////////////////////////////////////////////////
+// OBJECTS OBJECTS OBJECTS OBJECTS OBJECTS OBJECTS //
+/////////////////////////////////////////////////////
+
+//---------------------------------------------------
+
 // player object
 let player = {
     playerId: 'player1',
@@ -18,8 +24,13 @@ const dice = {
         return dice[formation][randomRange(0, 5)]
     }
 }
+//---------------------------------------------------
 
+/////////////////////////////////////////////////////
+// CLASSES CLASSES CLASSES CLASSES CLASSES CLASSES //
+/////////////////////////////////////////////////////
 
+//---------------------------------------------------
 // class for each map node
 class Territory {
     constructor(mapId, nativePop, food) {
@@ -47,8 +58,13 @@ class Unit {
     powers = []
     fatigued = false
 }
+//---------------------------------------------------
 
+///////////////////////////////////////////////////////
+// FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS FUNCTIONS //
+///////////////////////////////////////////////////////
 
+//---------------------------------------------------
 // random number from min to max inclusive
 const randomRange = (min, max) => {
     return Math.floor(Math.random() * (max + 1 - min) + min)
@@ -592,8 +608,13 @@ const createMap = () => {
     }
     return [gameMapDOM, mapArray]
 }
+//---------------------------------------------------
 
+///////////////////////////////////////////////////////
+// VARIABLES VARIABLES VARIABLES VARIABLES VARIABLES //
+///////////////////////////////////////////////////////
 
+//---------------------------------------------------
 // decides what happens when you click a territory
 let terrClickState = 'start-game'
 
@@ -647,6 +668,7 @@ let defendingStr = 0
 let diceRoll = 0
 let enemyRoll = 0
 
+//---------------------------------------------------
 
 // Create Starting State of Game + one enemy territory
 let gameMap = createMap()
